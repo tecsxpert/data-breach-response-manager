@@ -163,14 +163,19 @@ def audit_log_middleware(request: Request, response: Optional[Response] = None,
         logger.error(f"Audit logging error: {str(e)}")
 
 
-def log_exception(request: Request):
+def log_exception(request: Request, exception: Exception = None):
     """
     Log an exception.
+    
+    Args:
+        request: Flask request object
+        exception: The exception that occurred (optional)
     
     Usage:
         @app.errorhandler(Exception)
         def handle_error(e):
-            log_exception(request)
+            log_exception(request, e)
             return jsonify({'error': str(e)}), 500
     """
-    audit_logger.log_request(request, error=str(e))
+    error_msg = str(exception) if exception else "Unknown error"
+    audit_logger.log_request(request, error=error_msg)

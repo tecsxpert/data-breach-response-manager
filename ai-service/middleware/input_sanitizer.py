@@ -36,9 +36,17 @@ class InputSanitizer:
         r'<\|assistant\|>',
     ]
     
+    # SQL keywords that should be removed
+    SQL_KEYWORDS = [
+        r'DROP\b', r'DELETE\b', r'TRUNCATE\b', r'ALTER\b', r'CREATE\b', 
+        r'INSERT\b', r'UPDATE\b', r'SELECT\b', r'UNION\b', r'EXEC\b', 
+        r'EXECUTE\b', r'WAITFOR\b', r'SHUTDOWN\b'
+    ]
+    
     # Compile patterns for efficiency
     COMPILED_PATTERNS = [re.compile(p, re.IGNORECASE | re.DOTALL) for p in DANGEROUS_PATTERNS]
     COMPILED_PROMPT_INJECTION_PATTERNS = [re.compile(p, re.IGNORECASE | re.DOTALL) for p in PROMPT_INJECTION_PATTERNS]
+    COMPILED_SQL_KEYWORDS = [re.compile(p, re.IGNORECASE) for p in SQL_KEYWORDS]
     
     @staticmethod
     def sanitize_request(request: Request) -> Dict[str, Any]:
@@ -93,6 +101,10 @@ class InputSanitizer:
         
         # Strip HTML tags
         sanitized = re.sub(r'<[^>]+>', '', sanitized)
+        
+        # Remove SQL keywords
+        for pattern in InputSanitizer.COMPILED_SQL_KEYWORDS:
+            sanitized = pattern.sub('', sanitized)
         
         # HTML escape remaining content
         sanitized = html.escape(sanitized)

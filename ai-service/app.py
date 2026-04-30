@@ -5,6 +5,7 @@ from services.groq_client import GroqClient
 from middleware.input_sanitizer import sanitize_input_middleware
 from middleware.rate_limiter import rate_limit_middleware, add_rate_limit_headers
 from middleware.audit_logger import audit_log_middleware
+from middleware.request_validator import request_validator_middleware
 from dotenv import load_dotenv
 import os
 import time
@@ -28,6 +29,10 @@ def before_request():
     """Apply input sanitization and rate limiting middleware to all requests."""
     request._start_time = time.time()
     if request.method == 'POST' and request.endpoint:
+        # Request validation (size, content-type)
+        result = request_validator_middleware(request)
+        if result:
+            return result
         # Rate limiting check
         result = rate_limit_middleware(request)
         if result:
@@ -66,7 +71,7 @@ def describe_breach():
 def handle_error(e):
     """Handle errors and log exceptions."""
     from middleware.audit_logger import log_exception
-    log_exception(request)
+    log_exception(request, e)
     return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

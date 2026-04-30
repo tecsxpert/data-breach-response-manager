@@ -137,7 +137,7 @@ audit_logger = AuditLogger(log_file='audit.log', retention_days=90)
 
 
 def audit_log_middleware(request: Request, response: Optional[Response] = None, 
-                       error: Optional[str] = None):
+                       error: Optional[str] = None, duration_ms: Optional[float] = None):
     """
     Flask middleware for audit logging.
     
@@ -152,10 +152,11 @@ def audit_log_middleware(request: Request, response: Optional[Response] = None,
             return audit_log_middleware(request, response, duration_ms=duration)
     """
     try:
-        # Get duration if available
-        duration_ms = getattr(request, '_start_time', None)
-        if duration_ms:
-            duration_ms = (time.time() - duration_ms) * 1000
+        # Get duration if available (can be passed or from request)
+        if duration_ms is None:
+            duration_ms = getattr(request, '_start_time', None)
+            if duration_ms:
+                duration_ms = (time.time() - duration_ms) * 1000
         
         audit_logger.log_request(request, response, error, duration_ms)
         

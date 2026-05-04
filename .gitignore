@@ -1,0 +1,11 @@
+.env
+target/
+node_modules/
+__pycache__/
+chroma_data/
+*.class
+*.jar
+.idea/
+.vscode/
+*.log
+uploads/
